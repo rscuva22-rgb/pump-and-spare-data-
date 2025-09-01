@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pump Management System - RSC (Uva)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { 
+            font-family: 'Inter', sans-serif;
+            background-color: #F8FAFC; /* A very light gray for a clean background */
+        }
+        header h1, header p { 
+            font-family: 'Poppins', sans-serif;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(5px);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal.open {
+            display: flex;
+        }
+        .modal-content {
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .nav-link {
+            transition: color 0.3s;
+        }
+        .nav-link.active {
+            font-weight: 600;
+            color: #4C1D95; /* A darker purple */
+        }
+    </style>
+</head>
+<body>
+
+<header class="bg-white text-gray-950 shadow-md py-6">
+    <div class="container mx-auto px-4 text-center">
+        <h1 class="text-3xl md:text-4xl font-bold">Pump Management System</h1>
+        <p class="text-lg text-gray-600 mt-1">RSC (Uva)</p>
+        <nav class="mt-4">
+            <a href="#" id="home-link" class="nav-link mx-4 text-gray-700 hover:text-purple-600 active-link">Home</a>
+            <a href="#" id="spare-parts-summary-link" class="nav-link mx-4 text-gray-700 hover:text-purple-600">Spare Parts</a>
+        </nav>
+    </div>
+</header>
+
+<main class="container mx-auto p-4 mt-8">
+    <!-- Home Page Content -->
+    <div id="home-page">
+        <div class="bg-white rounded-2xl shadow-2xl p-6 mb-8">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                <h2 class="text-2xl font-semibold text-gray-800">Pump Inventory</h2>
+                <div class="flex gap-4 flex-wrap justify-end">
+                    <button id="addBtn" class="bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-4 py-2 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 flex items-center gap-2">
+                        <i class="fas fa-plus"></i> Add New Pump
+                    </button>
+                    <button id="exportBtn" class="bg-gradient-to-r from-purple-500 to-indigo-600 text-white px-4 py-2 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 flex items-center gap-2">
+                        <i class="fas fa-file-csv"></i> Export CSV
+                    </button>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                <input type="text" id="search" placeholder="Search Pump ID..." class="px-3 py-2 text-sm border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <select id="statusFilter" class="px-3 py-2 text-sm border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="" class="bg-white">All Status</option>
+                    <option value="Working" class="bg-white">Working</option>
+                    <option value="Not Working" class="bg-white">Not Working</option>
+                </select>
+                <select id="regionFilter" class="px-3 py-2 text-sm border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="" class="bg-white">All Regions</option>
+                    <option value="Bandarawela" class="bg-white">Bandarawela</option>
+                    <option value="Monaragala" class="bg-white">Monaragala</option>
+                </select>
+                <select id="pumpTypeFilter" class="px-3 py-2 text-sm border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="" class="bg-white">All Pump Types</option>
+                    <option value="Horizontal Multistage Centrifugal" class="bg-white">Horizontal Multistage Centrifugal</option>
+                    <option value="End Suction Vertical Delivery Centrifugal" class="bg-white">End Suction Vertical Delivery Centrifugal</option>
+                    <option value="Vertical Multistage Inline Booster" class="bg-white">Vertical Multistage Inline Booster</option>
+                    <option value="Borehole Type Submersible" class="bg-white">Borehole Type Submersible</option>
+                    <option value="Submersible Sewage Type" class="bg-white">Submersible Sewage Type</option>
+                    <option value="Split Casing Horizontal Centrifugal" class="bg-white">Split Casing Horizontal Centrifugal</option>
+                    <option value="Vertical Turbine Pumps" class="bg-white">Vertical Turbine Pumps</option>
+                    <option value="Submersible Type Dry Well Installation" class="bg-white">Submersible Type Dry Well Installation</option>
+                    <option value="Other" class="bg-white">Other</option>
+                </select>
+            </div>
+            <div class="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
+                 <select id="wsSchemeFilter" class="px-3 py-2 text-sm border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-auto">
+                    <option value="" class="bg-white">All WS Schemes</option>
+                    <option value="Diyathalawa" class="bg-white">Diyathalawa</option>
+                    <option value="Badulla" class="bg-white">Badulla</option>
+                    <option value="Welimada" class="bg-white">Welimada</option>
+                    <option value="Haputale" class="bg-white">Haputale</option>
+                    <option value="Lunuwatte" class="bg-white">Lunuwatte</option>
+                    <option value="Mihiyangane" class="bg-white">Mihiyangane</option>
+                    <option value="Giradurukotte" class="bg-white">Giradurukotte</option>
+                    <option value="Ambagasdowa" class="bg-white">Ambagasdowa</option>
+                    <option value="Demodara" class="bg-white">Demodara</option>
+                    <option value="Rathkinda" class="bg-white">Rathkinda</option>
+                    <option value="Kumbukkana" class="bg-white">Kumbukkana</option>
+                    <option value="Monaragala">Monaragala</option>
+                    <option value="Buttala" class="bg-white">Buttala</option>
+                    <option value="Okkampitiya" class="bg-white">Okkampitiya</option>
+                    <option value="Wellawaya" class="bg-white">Wellawaya</option>
+                    <option value="Thanamalwila" class="bg-white">Thanamalwila</option>
+                    <option value="Sooriyaara" class="bg-white">Sooriyaara</option>
+                    <option value="Sewanagala" class="bg-white">Sewanagala</option>
+                    <option value="Badalkumbura" class="bg-white">Badalkumbura</option>
+                    <option value="Bibile/Medagama" class="bg-white">Bibile/Medagama</option>
+                    <option value="Muthukandiya" class="bg-white">Muthukandiya</option>
+                </select>
+                <button id="clearFiltersBtn" class="bg-gray-200 text-gray-800 px-4 py-2 rounded-xl shadow-md hover:bg-gray-300 transition-colors flex items-center gap-2">
+                    <i class="fas fa-filter-circle-xmark"></i> Clear Filters
+                </button>
+            </div>
+
+            <div class="overflow-x-auto rounded-2xl shadow-inner border border-gray-200">
+                <table class="w-full text-sm text-left text-gray-700">
+                    <thead class="text-xs uppercase bg-gray-100 text-gray-600">
+                        <tr>
+                            <th scope="col" class="px-6 py-3">Pump ID</th>
+                            <th scope="col" class="px-6 py-3">Region</th>
+                            <th scope="col" class="px-6 py-3">Location</th>
+                            <th scope="col" class="px-6 py-3">Type</th>
+                            <th scope="col" class="px-6 py-3">WS Scheme</th>
+                            <th scope="col" class="px-6 py-3">Head (m)</th>
+                            <th scope="col" class="px-6 py-3">Capacity (m³/h)</th>
+                            <th scope="col" class="px-6 py-3">Power (kW)</th>
+                            <th scope="col" class="px-6 py-3">Status</th>
+                            <th scope="col" class="px-6 py-3">Date</th>
+                            <th scope="col" class="px-6 py-3">Contractor</th>
+                            <th scope="col" class="px-6 py-3">Contact</th>
+                            <th scope="col" class="px-6 py-3">Curve</th>
+                            <th scope="col" class="px-6 py-3">Remarks</th>
+                            <th scope="col" class="px-6 py-3">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pumpTable">
+                        <!-- Data will be dynamically inserted here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-2xl shadow-2xl p-6">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-4 text-center">Pump Status Overview</h2>
+            <div class="max-w-md mx-auto">
+                <canvas id="statusChart" class="bg-white rounded-xl"></canvas>
+                <div class="mt-4 text-center space-y-1 font-medium text-gray-700">
+                    <p id="workingPercent" class="text-green-600"></p>
+                    <p id="notWorkingPercent" class="text-red-600"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- New Spare Parts Summary Page -->
+    <div id="spare-parts-summary-page" class="hidden">
+        <div class="bg-white rounded-2xl shadow-2xl p-6 mb-8">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-4 text-center">Spare Parts Summary</h2>
+            <div class="flex flex-col sm:flex-row justify-end items-center gap-4 mb-6">
+                <select id="sparePartsPumpTypeFilter" class="px-3 py-2 text-sm border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-auto">
+                    <option value="" class="bg-white">All Pump Types</option>
+                    <option value="Horizontal Multistage Centrifugal" class="bg-white">Horizontal Multistage Centrifugal</option>
+                    <option value="End Suction Vertical Delivery Centrifugal" class="bg-white">End Suction Vertical Delivery Centrifugal</option>
+                    <option value="Vertical Multistage Inline Booster" class="bg-white">Vertical Multistage Inline Booster</option>
+                    <option value="Borehole Type Submersible" class="bg-white">Borehole Type Submersible</option>
+                    <option value="Submersible Sewage Type" class="bg-white">Submersible Sewage Type</option>
+                    <option value="Split Casing Horizontal Centrifugal" class="bg-white">Split Casing Horizontal Centrifugal</option>
+                    <option value="Vertical Turbine Pumps" class="bg-white">Vertical Turbine Pumps</option>
+                    <option value="Submersible Type Dry Well Installation" class="bg-white">Submersible Type Dry Well Installation</option>
+                    <option value="Other" class="bg-white">Other</option>
+                </select>
+                <button id="clearSparePartsFiltersBtn" class="bg-gray-200 text-gray-800 px-4 py-2 rounded-xl shadow-md hover:bg-gray-300 transition-colors flex items-center gap-2">
+                    <i class="fas fa-filter-circle-xmark"></i> Clear Filter
+                </button>
+            </div>
+            <div class="overflow-x-auto rounded-2xl shadow-inner border border-gray-200">
+                <table class="w-full text-sm text-left text-gray-700">
+                    <thead class="text-xs uppercase bg-gray-100 text-gray-600">
+                        <tr>
+                            <th scope="col" class="px-6 py-3">Pump ID</th>
+                            <th scope="col" class="px-6 py-3">Pump Location</th>
+                            <th scope="col" class="px-6 py-3">Part Name</th>
+                            <th scope="col" class="px-6 py-3">Quantity</th>
+                            <th scope="col" class="px-6 py-3">Last Checked</th>
+                        </tr>
+                    </thead>
+                    <tbody id="sparePartsSummaryTable">
+                        <!-- Spare parts summary data will be dynamically inserted here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</main>
+
+<!-- Modal for adding/editing pumps -->
+<div class="modal" id="modal">
+    <div class="modal-content bg-white rounded-2xl shadow-2xl w-full max-w-lg p-8 m-4">
+        <h3 id="formTitle" class="text-2xl font-bold text-center mb-6 text-gray-800">Add Pump</h3>
+        <form id="form" class="space-y-4">
+            <input type="hidden" id="editKey">
+            <div>
+                <label for="name" class="block text-sm font-medium text-gray-700">Pump ID</label>
+                <input type="text" id="name" placeholder="E.g., PMP-001" required class="mt-1 block w-full px-4 py-2 border border-gray-300 bg-white text-gray-900 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div>
+                <label for="region" class="block text-sm font-medium text-gray-700">Region</label>
+                <select id="region" required class="mt-1 block w-full px-4 py-2 border border-gray-300 bg-white text-gray-900 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="Bandarawela">Bandarawela</option>
+                    <option value="Monaragala">Monaragala</option>
+                </select>
+            </div>
+            <div>
+                <label for="location" class="block text-sm font-medium text-gray-700">Pump Location</label>
+                <input type="text" id="location" placeholder="E.g., Badulla Water Treatment Plant" required class="mt-1 block w-full px-4 py-2 border border-gray-300 bg-white text-gray-900 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div>
+                <label for="pumpType" class="block text-sm font-medium text-gray-700">Pump Type</label>
+                <select id="pumpType" required class="mt-1 block w-full px-4 py-2 border border-gray-300 bg-white text-gray-900 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="" disabled selected class="bg-white">-- Select a Pump Type --</option>
+                    <option value="Horizontal Multistage Centrifugal" class="bg-white">Horizontal Multistage Centrifugal</option>
+                    <option value="End Suction Vertical Delivery Centrifugal" class="bg-white">End Suction Vertical Delivery Centrifugal</option>
+                    <option value="Vertical Multistage Inline Booster" class="bg-white">Vertical Multistage Inline Booster</option>
+                    <option value="Borehole Type Submersible" class="bg-white">Borehole Type Submersible</option>
+                    <option value="Submersible Sewage Type" class="bg-white">Submersible Sewage Type</option>
+                    <option value="Split Casing Horizontal Centrifugal" class="bg-white">Split Casing Horizontal Centrifugal</option>
+                    <option value="Vertical Turbine Pumps" class="bg-white">Vertical Turbine Pumps</option>
+                    <option value="Submersible Type Dry Well Installation" class="bg-white">Submersible Type Dry Well Installation</option>
+                    <option value="Other" class="bg-white">Other</option>
+                </select>
+            </div>
+            <div>
+                <label for="wsScheme" class="block text-sm font-medium text-gray-700">WS Scheme</label>
+                <select id="wsScheme" required class="mt-1 block w-full px-4 py-2 border border-gray-300 bg-white text-gray-900 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="" disabled selected class="bg-white">-- Select a WS Scheme --</option>
+                    <option value="Diyathalawa" class="bg-white">Diyathalawa</option>
+                    <option value="Badulla" class="bg-white">Badulla</option>
+                    <option value="Welimada" class="bg-white">Welimada</option>
+                    <option value="Haputale" class="bg-white">Haputale</option>
+                    <option value="Lunuwatte" class="bg-white">Lunuwatte</option>
+                    <option value="Mihiyangane" class="bg-white">Mihiyangane</option>
+                    <option value="Giradurukotte" class="bg-white">Giradurukotte</option>
+                    <option value="Ambagasdowa" class="bg-white">Ambagasdowa</option>
+                    <option value="Demodara" class="bg-white">Demodara</option>
+                    <option value="Rathkinda" class="bg-white">Rathkinda</option>
+                    <option value="Kumbukkana" class="bg-white">Kumbukkana</option>
+                    <option value="Monaragala">Monaragala</option>
+                    <option value="Buttala" class="bg-white">Buttala</option>
+                    <option value="Okkampitiya" class="bg-white">Okkampitiya</option>
+                    <option value="Wellawaya" class="bg-white">Wellawaya</option>
+                    <option value="Thanamalwila" class="bg-white">Thanamalwila</option>
+                    <option value="Sooriyaara" class="bg-white">Sooriyaara</option>
+                    <option value="Sewanagala" class="bg-white">Sewanagala</option>
+                    <option value="Badalkumbura" class="bg-white">Badalkumbura</option>
+                    <option value="Bibile/Medagama" class="bg-white">Bibile/Medagama</option>
+                    <option value="Muthukandiya" class="bg-white">Muthukandiya</option>
+                </select>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                    <label for="head" class="block text-sm font-medium text-gray-700">Head (m)</label>
+                    <input type="number" id="head" step="any" placeholder="Head" required class="mt-1 block w-full px-4 py-2 border border-gray-300 bg-white text-gray-900 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label for="capacity" class="block text-sm font-medium text-gray-700">Capacity (m³/h)</label>
+                    <input type="number" id="capacity" step="any" placeholder="Capacity" required class="mt-1 block w-full px-4 py-2 border border-gray-300 bg-white text-gray-900 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label for="power" class="block text-sm font-medium text-gray-700">Power (kW)</label>
+                    <input type="number" id="power" step="any" placeholder="Power" required class="mt-1 block w-full px-4 py-2 border border-gray-300 bg-white text-gray-900 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+            </div>
+            <div>
+                <label for="status" class="block text-sm font-medium text-gray-700">Status</label>
+                <select id="status" required class="mt-1 block w-full px-4 py-2 border border-gray-300 bg-white text-gray-900 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="Working" class="bg-white">Working</option>
+                    <option value="Not Working" class="bg-white">Not Working</option>
+                </select>
+            </div>
+            <div>
+                <label for="date" class="block text-sm font-medium text-gray-700">Date of Commence</label>
+                <input type="date" id="date" required class="mt-1 block w-full px-4 py-2 border border-gray-300 bg-white text-gray-900 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div>
+                <label for="contractor" class="block text-sm font-medium text-gray-700">Contractor</label>
+                <input type="text" id="contractor" placeholder="Contractor" required class="mt-1 block w-full px-4 py-2 border border-gray-300 bg-white text-gray-900 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div>
+                <label for="contact" class="block text-sm font-medium text-gray-700">Contact</label>
+                <input type="text" id="contact" placeholder="Contact" required class="mt-1 block w-full px-4 py-2 border border-gray-300 bg-white text-gray-900 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div>
+                <label for="curveFile" class="block text-sm font-medium text-gray-700">Performance Curve</label>
+                <input type="file" id="curveFile" accept="image/*,.pdf" class="mt-1 block w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700">
+                <div id="uploadProgressContainer" class="mt-2 hidden w-full bg-gray-200 rounded-full h-2.5">
+                    <div id="uploadProgress" class="bg-blue-600 h-2.5 rounded-full transition-all duration-300 ease-in-out" style="width: 0%;"></div>
+                </div>
+            </div>
+            <div>
+                <label for="remark" class="block text-sm font-medium text-gray-700">Remarks</label>
+                <textarea id="remark" placeholder="Add Remarks" rows="3" class="mt-1 block w-full px-4 py-2 border border-gray-300 bg-white text-gray-900 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+            </div>
+            <div class="flex justify-end space-x-4 pt-4">
+                <button type="button" id="cancelBtn" class="px-6 py-2 bg-gray-300 text-gray-800 rounded-xl hover:bg-gray-400 transition-colors">Cancel</button>
+                <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors">Save Pump</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal for managing spare parts -->
+<div class="modal" id="sparePartsModal">
+    <div class="modal-content bg-white rounded-2xl shadow-2xl w-full max-w-2xl p-8 m-4">
+        <h3 id="sparePartsTitle" class="text-2xl font-bold text-center mb-6 text-gray-800">Spare Parts for <span id="pumpIdPlaceholder" class="text-indigo-600"></span></h3>
+        
+        <!-- Table for existing spare parts -->
+        <div class="overflow-x-auto rounded-xl border border-gray-200 mb-6">
+            <table class="w-full text-sm text-left text-gray-700">
+                <thead class="text-xs uppercase bg-gray-100 text-gray-600">
+                    <tr>
+                        <th scope="col" class="px-6 py-3">Part Name</th>
+                        <th scope="col" class="px-6 py-3">Pump Location</th>
+                        <th scope="col" class="px-6 py-3">Quantity</th>
+                        <th scope="col" class="px-6 py-3">Last Checked</th>
+                        <th scope="col" class="px-6 py-3">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="sparePartsTable">
+                    <!-- Spare parts will be dynamically inserted here -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Form to add a new spare part -->
+        <h4 class="text-xl font-semibold mb-4 text-gray-800">Add New Spare Part</h4>
+        <form id="sparePartsForm" class="space-y-4">
+            <input type="hidden" id="currentPumpKey">
+            <div>
+                <label for="partName" class="block text-sm font-medium text-gray-700">Part Name</label>
+                <input type="text" id="partName" placeholder="E.g., Impeller, Bearing" required class="mt-1 block w-full px-4 py-2 border border-gray-300 bg-white text-gray-900 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div>
+                <label for="sparePartLocation" class="block text-sm font-medium text-gray-700">Pump Location</label>
+                <input type="text" id="sparePartLocation" readonly class="mt-1 block w-full px-4 py-2 border border-gray-300 bg-gray-200 text-gray-600 rounded-lg shadow-sm focus:outline-none">
+            </div>
+            <div>
+                <label for="quantity" class="block text-sm font-medium text-gray-700">Quantity</label>
+                <input type="number" id="quantity" placeholder="E.g., 2" required class="mt-1 block w-full px-4 py-2 border border-gray-300 bg-white text-gray-900 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div class="flex justify-end space-x-4 pt-4">
+                <button type="button" onclick="closeSparePartsModal()" class="px-6 py-2 bg-gray-300 text-gray-800 rounded-xl hover:bg-gray-400 transition-colors">Close</button>
+                <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors">Add Part</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<footer class="bg-white shadow-inner py-4 mt-8">
+    <div class="container mx-auto px-4 text-center text-gray-500 text-sm">
+        <p>Mechanical and Electrical Section, Regional Support Center (Uva), National Water Supply and Drainage Board of Sri Lanka</p>
+    </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyDkCFr-63wJOXW4ZQJj1RTCBp_80s7H9jw",
+        authDomain: "pump-database-13e25.firebaseapp.com",
+        databaseURL: "https://pump-database-13e25-default-rtdb.firebaseio.com",
+        projectId: "pump-database-13e25",
+        storageBucket: "pump-database-13e25.appspot.com",
+        messagingSenderId: "269362357992",
+        appId: "1:269362357992:web:93f99581df8a0eded48b5d",
+        measurementId: "G-RB2PWHJCY9"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const storage = firebase.storage();
+
+    const form = document.getElementById('form');
+    const modal = document.getElementById('modal');
+    const pumpTable = document.getElementById('pumpTable');
+    const addBtn = document.getElementById('addBtn');
+    const cancelBtn = document.getElementById('cancelBtn');
+    const uploadProgressContainer = document.getElementById('uploadProgressContainer');
+    const uploadProgress = document.getElementById('uploadProgress');
+
+    const searchInput = document.getElementById('search');
+    const statusFilter = document.getElementById('statusFilter');
+    const regionFilter = document.getElementById('regionFilter');
+    const wsSchemeFilter = document.getElementById('wsSchemeFilter');
+    const pumpTypeFilter = document.getElementById('pumpTypeFilter');
+    const exportBtn = document.getElementById('exportBtn');
+    const clearFiltersBtn = document.getElementById('clearFiltersBtn');
+    
+    // Page navigation elements
+    const homePage = document.getElementById('home-page');
+    const homeLink = document.getElementById('home-link');
+    const sparePartsSummaryPage = document.getElementById('spare-parts-summary-page');
+    const sparePartsSummaryLink = document.getElementById('spare-parts-summary-link');
+
+    // Spare parts modal elements
+    const sparePartsModal = document.getElementById('sparePartsModal');
+    const sparePartsForm = document.getElementById('sparePartsForm');
+    const sparePartsTable = document.getElementById('sparePartsTable');
+    const pumpIdPlaceholder = document.getElementById('pumpIdPlaceholder');
+    const currentPumpKeyInput = document.getElementById('currentPumpKey');
+    const sparePartsSummaryTable = document.getElementById('sparePartsSummaryTable');
+    const sparePartsPumpTypeFilter = document.getElementById('sparePartsPumpTypeFilter');
+    const clearSparePartsFiltersBtn = document.getElementById('clearSparePartsFiltersBtn');
+
+    let allPumps = [];
+    let sparePartsListener = null;
+
+    const ctx = document.getElementById('statusChart').getContext('2d');
+    let statusChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: { labels: ['Working', 'Not Working'], datasets: [{ data: [0, 0], backgroundColor: ['#34D399', '#F87171'] }] },
+        options: { 
+            responsive: true, 
+            plugins: { 
+                legend: { 
+                    position: 'bottom', 
+                    labels: { 
+                        color: '#4B5563' 
+                    }
+                }
+            } 
+        }
+    });
+
+    function updateChart(pumps) {
+        const workingCount = pumps.filter(p => p.status === 'Working').length;
+        const notWorkingCount = pumps.filter(p => p.status === 'Not Working').length;
+        statusChart.data.datasets[0].data = [workingCount, notWorkingCount];
+        statusChart.update();
+        const total = pumps.length || 1;
+        document.getElementById('workingPercent').textContent = `Working: ${((workingCount / total) * 100).toFixed(1)}%`;
+        document.getElementById('notWorkingPercent').textContent = `Not Working: ${((notWorkingCount / total) * 100).toFixed(1)}%`;
+    }
+
+    db.ref("pumps").on("value", snapshot => {
+        const data = snapshot.val() || {};
+        allPumps = Object.keys(data).map(key => ({ key, ...data[key] }));
+        renderTable(allPumps);
+        updateChart(allPumps);
+        renderSparePartsSummaryTable(allPumps);
+    });
+
+    function renderTable(pumps) {
+        pumpTable.innerHTML = "";
+        pumps.forEach(pump => {
+            const row = document.createElement('tr');
+            row.className = "bg-white border-b border-gray-200 hover:bg-gray-50 transition-colors";
+            row.innerHTML = `
+                <td class="px-6 py-4 font-medium text-gray-900">${pump.name}</td>
+                <td class="px-6 py-4">${pump.region}</td>
+                <td class="px-6 py-4">${pump.location}</td>
+                <td class="px-6 py-4">${pump.pumpType || ''}</td>
+                <td class="px-6 py-4">${pump.wsScheme || ''}</td>
+                <td class="px-6 py-4">${pump.head}</td>
+                <td class="px-6 py-4">${pump.capacity}</td>
+                <td class="px-6 py-4">${pump.power}</td>
+                <td class="px-6 py-4">
+                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${pump.status === 'Working' ? 'bg-green-600 text-white' : 'bg-red-600 text-white'}">
+                        ${pump.status}
+                    </span>
+                </td>
+                <td class="px-6 py-4">${pump.date}</td>
+                <td class="px-6 py-4">${pump.contractor}</td>
+                <td class="px-6 py-4">${pump.contact}</td>
+                <td class="px-6 py-4">
+                    ${pump.curveFile ? `<a href="${pump.curveFile}" target="_blank" class="text-blue-600 hover:underline">View File</a>` : ""}
+                </td>
+                <td class="px-6 py-4">${pump.remark || ''}</td>
+                <td class="px-6 py-4 space-x-2 whitespace-nowrap">
+                    <button onclick="editPump('${pump.key}')" class="text-blue-600 hover:text-blue-800 transition-colors"><i class="fas fa-edit"></i> Edit</button>
+                    <button onclick="confirmDeletePump('${pump.key}')" class="text-red-600 hover:text-red-800 transition-colors"><i class="fas fa-trash"></i> Delete</button>
+                    <button onclick="openSparePartsModal('${pump.key}')" class="text-purple-600 hover:text-purple-800 transition-colors"><i class="fas fa-wrench"></i> Spare Parts</button>
+                </td>`;
+            pumpTable.appendChild(row);
+        });
+    }
+
+    addBtn.addEventListener('click', () => {
+        form.reset();
+        document.getElementById('editKey').value = '';
+        document.getElementById('formTitle').textContent = 'Add Pump';
+        uploadProgressContainer.classList.add('hidden');
+        uploadProgress.style.width = "0%";
+        modal.classList.add('open');
+    });
+
+    cancelBtn.addEventListener('click', () => modal.classList.remove('open'));
+
+    form.addEventListener('submit', e => {
+        e.preventDefault();
+        const editKey = document.getElementById('editKey').value;
+        const fileInput = document.getElementById('curveFile');
+        const file = fileInput.files[0];
+
+        const pumpData = {
+            name: document.getElementById('name').value,
+            region: document.getElementById('region').value,
+            location: document.getElementById('location').value,
+            pumpType: document.getElementById('pumpType').value,
+            wsScheme: document.getElementById('wsScheme').value,
+            head: parseFloat(document.getElementById('head').value),
+            capacity: parseFloat(document.getElementById('capacity').value),
+            power: parseFloat(document.getElementById('power').value),
+            status: document.getElementById('status').value,
+            date: document.getElementById('date').value,
+            contractor: document.getElementById('contractor').value,
+            contact: document.getElementById('contact').value,
+            remark: document.getElementById('remark').value,
+            curveFile: ""
+        };
+
+        if (file) {
+            uploadFileAndSave(pumpData, file, editKey);
+        } else {
+            if (editKey) {
+                db.ref("pumps/" + editKey).once("value").then(snapshot => {
+                    pumpData.curveFile = snapshot.val().curveFile || "";
+                    savePump(editKey, pumpData);
+                });
+            } else {
+                savePump(editKey, pumpData);
+            }
+        }
+        modal.classList.remove('open');
+    });
+
+    function uploadFileAndSave(pumpData, file, editKey = null) {
+        uploadProgressContainer.classList.remove('hidden');
+        const storageRef = storage.ref('performance_curves/' + Date.now() + "_" + file.name);
+        const uploadTask = storageRef.put(file);
+
+        uploadTask.on('state_changed',
+            snapshot => {
+                const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                uploadProgress.style.width = progress + "%";
+            },
+            error => {
+                console.error("Upload failed:", error);
+                showCustomAlert("Error uploading file. Please try again.");
+            },
+            () => {
+                uploadTask.snapshot.ref.getDownloadURL().then(url => {
+                    pumpData.curveFile = url;
+                    savePump(editKey, pumpData);
+                });
+            }
+        );
+    }
+
+    function savePump(editKey, pumpData) {
+        if (editKey) {
+            db.ref("pumps/" + editKey).set(pumpData);
+        } else {
+            db.ref("pumps").push(pumpData);
+        }
+    }
+
+    window.editPump = function(key) {
+        db.ref("pumps/" + key).once("value").then(snapshot => {
+            const pump = snapshot.val();
+            document.getElementById('editKey').value = key;
+            document.getElementById('name').value = pump.name;
+            document.getElementById('region').value = pump.region;
+            document.getElementById('location').value = pump.location;
+            document.getElementById('pumpType').value = pump.pumpType || '';
+            document.getElementById('wsScheme').value = pump.wsScheme || '';
+            document.getElementById('head').value = pump.head;
+            document.getElementById('capacity').value = pump.capacity;
+            document.getElementById('power').value = pump.power;
+            document.getElementById('status').value = pump.status;
+            document.getElementById('date').value = pump.date;
+            document.getElementById('contractor').value = pump.contractor;
+            document.getElementById('contact').value = pump.contact;
+            document.getElementById('remark').value = pump.remark;
+            document.getElementById('formTitle').textContent = 'Edit Pump';
+            uploadProgressContainer.classList.add('hidden');
+            modal.classList.add('open');
+        });
+    }
+
+    window.confirmDeletePump = function(key) {
+        showCustomConfirm("Are you sure you want to delete this pump?", () => {
+            db.ref("pumps/" + key).once("value").then(snapshot => {
+                const pump = snapshot.val();
+                if (pump.curveFile) {
+                    const storageRef = storage.refFromURL(pump.curveFile);
+                    storageRef.delete().then(() => {
+                        db.ref("pumps/" + key).remove();
+                    }).catch(error => {
+                        console.error("Error deleting file:", error);
+                        showCustomAlert("Error deleting file. Deleting record anyway.");
+                        db.ref("pumps/" + key).remove();
+                    });
+                } else {
+                    db.ref("pumps/" + key).remove();
+                }
+            });
+        });
+    }
+
+    function filterTable() {
+        const searchTerm = searchInput.value.toLowerCase();
+        const selectedStatus = statusFilter.value;
+        const selectedRegion = regionFilter.value;
+        const selectedWsScheme = wsSchemeFilter.value;
+        const selectedPumpType = pumpTypeFilter.value;
+
+        const filteredPumps = allPumps.filter(pump => {
+            const matchesSearch = pump.name.toLowerCase().includes(searchTerm);
+            const matchesStatus = selectedStatus === "" || pump.status === selectedStatus;
+            const matchesRegion = selectedRegion === "" || pump.region === selectedRegion;
+            const matchesWsScheme = selectedWsScheme === "" || pump.wsScheme === selectedWsScheme;
+            const matchesPumpType = selectedPumpType === "" || pump.pumpType === selectedPumpType;
+            return matchesSearch && matchesStatus && matchesRegion && matchesWsScheme && matchesPumpType;
+        });
+        renderTable(filteredPumps);
+        updateChart(filteredPumps);
+    }
+
+    searchInput.addEventListener('input', filterTable);
+    statusFilter.addEventListener('change', filterTable);
+    regionFilter.addEventListener('change', filterTable);
+    wsSchemeFilter.addEventListener('change', filterTable);
+    pumpTypeFilter.addEventListener('change', filterTable);
+
+    clearFiltersBtn.addEventListener('click', () => {
+        searchInput.value = '';
+        statusFilter.value = '';
+        regionFilter.value = '';
+        wsSchemeFilter.value = '';
+        pumpTypeFilter.value = '';
+        renderTable(allPumps);
+        updateChart(allPumps);
+    });
+
+    exportBtn.addEventListener('click', () => {
+        const headers = ['Pump ID', 'Region', 'Pump Location', 'Pump Type', 'WS Scheme', 'Head (m)', 'Capacity (m³/h)', 'Power (kW)', 'Status', 'Date of Commence', 'Contractor', 'Contact', 'Performance Curve URL', 'Remarks'];
+        const rows = allPumps.map(pump => [
+            pump.name,
+            pump.region,
+            pump.location,
+            pump.pumpType,
+            pump.wsScheme,
+            pump.head,
+            pump.capacity,
+            pump.power,
+            pump.status,
+            pump.date,
+            pump.contractor,
+            pump.contact,
+            pump.curveFile,
+            pump.remark
+        ]);
+
+        let csvContent = "data:text/csv;charset=utf-8," + headers.join(',') + '\n';
+        rows.forEach(row => {
+            csvContent += row.map(item => `"${(item || '').toString().replace(/"/g, '""')}"`).join(',') + '\n';
+        });
+
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", "pumps.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    });
+
+    function showCustomAlert(message) {
+        const modal = document.createElement('div');
+        modal.className = 'modal open';
+        modal.innerHTML = `
+            <div class="bg-white rounded-xl p-8 shadow-2xl max-w-sm w-full text-center border border-gray-200">
+                <h3 class="text-xl font-bold text-red-600 mb-4">Notification</h3>
+                <p class="text-gray-700">${message}</p>
+                <button onclick="this.closest('.modal').remove()" class="mt-6 px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">OK</button>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    }
+
+    function showCustomConfirm(message, onConfirm) {
+        const modal = document.createElement('div');
+        modal.className = 'modal open';
+        modal.innerHTML = `
+            <div class="bg-white rounded-xl p-8 shadow-2xl max-w-sm w-full text-center border border-gray-200">
+                <h3 class="text-xl font-bold text-red-600 mb-4">Confirm Deletion</h3>
+                <p class="text-gray-700">${message}</p>
+                <div class="flex justify-center space-x-4 mt-6">
+                    <button id="confirm-ok" class="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">OK</button>
+                    <button id="confirm-cancel" class="px-6 py-2 bg-gray-400 text-white rounded-lg hover:bg-gray-500 transition-colors">Cancel</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+
+        document.getElementById('confirm-ok').addEventListener('click', () => {
+            onConfirm();
+            modal.remove();
+        });
+        document.getElementById('confirm-cancel').addEventListener('click', () => {
+            modal.remove();
+        });
+    }
+
+    // Function to handle page switching
+    function showPage(pageId) {
+        const pages = [homePage, sparePartsSummaryPage];
+        const links = [homeLink, sparePartsSummaryLink];
+
+        pages.forEach(page => {
+            page.classList.add('hidden');
+        });
+        links.forEach(link => {
+            link.classList.remove('active');
+        });
+
+        document.getElementById(pageId).classList.remove('hidden');
+        document.getElementById(pageId.replace('-page', '-link')).classList.add('active');
+    }
+
+    // Event listeners for page navigation
+    homeLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        showPage('home-page');
+    });
+
+    sparePartsSummaryLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        showPage('spare-parts-summary-page');
+        filterSparePartsSummary();
+    });
+    
+    // Initial page load
+    showPage('home-page');
+
+    // Spare parts functions
+    window.openSparePartsModal = function(pumpKey) {
+        currentPumpKeyInput.value = pumpKey;
+        
+        // Fetch pump data to get the location
+        db.ref(`pumps/${pumpKey}`).once("value").then(snapshot => {
+            const pump = snapshot.val();
+            pumpIdPlaceholder.textContent = pump.name;
+            document.getElementById('sparePartLocation').value = pump.location;
+        });
+
+        // Detach old listener if it exists
+        if (sparePartsListener) {
+            sparePartsListener();
+        }
+
+        // Attach new listener for the specific pump's spare parts
+        sparePartsListener = db.ref(`pumps/${pumpKey}/spareParts`).on("value", snapshot => {
+            const partsData = snapshot.val() || {};
+            const parts = Object.keys(partsData).map(key => ({ key, ...partsData[key] }));
+            renderSparePartsTable(parts);
+        });
+        
+        sparePartsModal.classList.add('open');
+    };
+
+    window.closeSparePartsModal = function() {
+        sparePartsModal.classList.remove('open');
+        // Detach listener to prevent memory leaks
+        if (sparePartsListener) {
+            db.ref(`pumps/${currentPumpKeyInput.value}/spareParts`).off("value", sparePartsListener);
+            sparePartsListener = null;
+        }
+    };
+
+    function renderSparePartsTable(parts) {
+        sparePartsTable.innerHTML = "";
+        if (parts.length === 0) {
+            sparePartsTable.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-gray-500">No spare parts added yet.</td></tr>`;
+            return;
+        }
+
+        parts.forEach(part => {
+            const row = document.createElement('tr');
+            row.className = "bg-white border-b border-gray-200 hover:bg-gray-50 transition-colors";
+            row.innerHTML = `
+                <td class="px-6 py-4 font-medium text-gray-900">${part.partName}</td>
+                <td class="px-6 py-4">${part.pumpLocation || ''}</td>
+                <td class="px-6 py-4">${part.quantity}</td>
+                <td class="px-6 py-4">${part.lastChecked}</td>
+                <td class="px-6 py-4">
+                    <button onclick="deleteSparePart('${currentPumpKeyInput.value}', '${part.key}')" class="text-red-600 hover:text-red-800 transition-colors"><i class="fas fa-trash"></i> Delete</button>
+                </td>
+            `;
+            sparePartsTable.appendChild(row);
+        });
+    }
+
+    sparePartsForm.addEventListener('submit', e => {
+        e.preventDefault();
+        const pumpKey = currentPumpKeyInput.value;
+        const partName = document.getElementById('partName').value;
+        const pumpLocation = document.getElementById('sparePartLocation').value;
+        const quantity = document.getElementById('quantity').value;
+        
+        const sparePartData = {
+            partName,
+            pumpLocation,
+            quantity: parseInt(quantity, 10),
+            lastChecked: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+        };
+
+        db.ref(`pumps/${pumpKey}/spareParts`).push(sparePartData);
+        sparePartsForm.reset();
+    });
+
+    window.deleteSparePart = function(pumpKey, partKey) {
+        showCustomConfirm("Are you sure you want to delete this spare part?", () => {
+            db.ref(`pumps/${pumpKey}/spareParts/${partKey}`).remove();
+        });
+    };
+
+    function renderSparePartsSummaryTable(pumps) {
+        sparePartsSummaryTable.innerHTML = "";
+        let hasParts = false;
+
+        pumps.forEach(pump => {
+            const spareParts = pump.spareParts || {};
+            for (const partKey in spareParts) {
+                hasParts = true;
+                const part = spareParts[partKey];
+                const row = document.createElement('tr');
+                row.className = "bg-white border-b border-gray-200 hover:bg-gray-50 transition-colors";
+                row.innerHTML = `
+                    <td class="px-6 py-4 font-medium text-gray-900">${pump.name}</td>
+                    <td class="px-6 py-4">${part.pumpLocation || ''}</td>
+                    <td class="px-6 py-4">${part.partName}</td>
+                    <td class="px-6 py-4">${part.quantity}</td>
+                    <td class="px-6 py-4">${part.lastChecked}</td>
+                `;
+                sparePartsSummaryTable.appendChild(row);
+            }
+        });
+
+        if (!hasParts) {
+            sparePartsSummaryTable.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-gray-500">No spare parts have been added to any pumps yet.</td></tr>`;
+        }
+    }
+
+    // New filter logic for spare parts summary page
+    function filterSparePartsSummary() {
+        const selectedPumpType = sparePartsPumpTypeFilter.value;
+
+        const filteredPumps = allPumps.filter(pump => {
+            const matchesPumpType = selectedPumpType === "" || pump.pumpType === selectedPumpType;
+            return matchesPumpType;
+        });
+        
+        renderSparePartsSummaryTable(filteredPumps);
+    }
+    
+    sparePartsPumpTypeFilter.addEventListener('change', filterSparePartsSummary);
+
+    clearSparePartsFiltersBtn.addEventListener('click', () => {
+        sparePartsPumpTypeFilter.value = '';
+        filterSparePartsSummary();
+    });
+</script>
+
+</body>
+</html>
