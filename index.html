@@ -223,22 +223,22 @@
             <input type="hidden" id="editKey">
             <div>
                 <label for="name" class="block text-sm font-medium text-gray-700">Pump ID</label>
-                <input type="text" id="name" placeholder="E.g., PMP-001" required class="mt-1 block w-full px-4 py-2 border border-gray-300 bg-white text-gray-900 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <input type="text" id="name" placeholder="E.g., PMP-001" class="mt-1 block w-full px-4 py-2 border border-gray-300 bg-white text-gray-900 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
             </div>
             <div>
                 <label for="region" class="block text-sm font-medium text-gray-700">Region</label>
-                <select id="region" required class="mt-1 block w-full px-4 py-2 border border-gray-300 bg-white text-gray-900 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <select id="region" class="mt-1 block w-full px-4 py-2 border border-gray-300 bg-white text-gray-900 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                     <option value="Bandarawela">Bandarawela</option>
                     <option value="Monaragala">Monaragala</option>
                 </select>
             </div>
             <div>
                 <label for="location" class="block text-sm font-medium text-gray-700">Pump Location</label>
-                <input type="text" id="location" placeholder="E.g., Badulla Water Treatment Plant" required class="mt-1 block w-full px-4 py-2 border border-gray-300 bg-white text-gray-900 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <input type="text" id="location" placeholder="E.g., Badulla Water Treatment Plant" class="mt-1 block w-full px-4 py-2 border border-gray-300 bg-white text-gray-900 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
             </div>
             <div>
                 <label for="pumpType" class="block text-sm font-medium text-gray-700">Pump Type</label>
-                <select id="pumpType" required class="mt-1 block w-full px-4 py-2 border border-gray-300 bg-white text-gray-900 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <select id="pumpType" class="mt-1 block w-full px-4 py-2 border border-gray-300 bg-white text-gray-900 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                     <option value="" disabled selected class="bg-white">-- Select a Pump Type --</option>
                     <option value="Horizontal Multistage Centrifugal" class="bg-white">Horizontal Multistage Centrifugal</option>
                     <option value="End Suction Vertical Delivery Centrifugal" class="bg-white">End Suction Vertical Delivery Centrifugal</option>
@@ -253,7 +253,7 @@
             </div>
             <div>
                 <label for="wsScheme" class="block text-sm font-medium text-gray-700">WS Scheme</label>
-                <select id="wsScheme" required class="mt-1 block w-full px-4 py-2 border border-gray-300 bg-white text-gray-900 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <select id="wsScheme" class="mt-1 block w-full px-4 py-2 border border-gray-300 bg-white text-gray-900 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                     <option value="" disabled selected class="bg-white">-- Select a WS Scheme --</option>
                     <option value="Diyathalawa" class="bg-white">Diyathalawa</option>
                     <option value="Badulla" class="bg-white">Badulla</option>
@@ -281,35 +281,35 @@
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
                     <label for="head" class="block text-sm font-medium text-gray-700">Head (m)</label>
-                    <input type="number" id="head" step="any" placeholder="Head" required class="mt-1 block w-full px-4 py-2 border border-gray-300 bg-white text-gray-900 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <input type="number" id="head" step="any" placeholder="Head" class="mt-1 block w-full px-4 py-2 border border-gray-300 bg-white text-gray-900 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
                 <div>
                     <label for="capacity" class="block text-sm font-medium text-gray-700">Capacity (m³/h)</label>
-                    <input type="number" id="capacity" step="any" placeholder="Capacity" required class="mt-1 block w-full px-4 py-2 border border-gray-300 bg-white text-gray-900 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <input type="number" id="capacity" step="any" placeholder="Capacity" class="mt-1 block w-full px-4 py-2 border border-gray-300 bg-white text-gray-900 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
                 <div>
                     <label for="power" class="block text-sm font-medium text-gray-700">Power (kW)</label>
-                    <input type="number" id="power" step="any" placeholder="Power" required class="mt-1 block w-full px-4 py-2 border border-gray-300 bg-white text-gray-900 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <input type="number" id="power" step="any" placeholder="Power" class="mt-1 block w-full px-4 py-2 border border-gray-300 bg-white text-gray-900 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
             </div>
             <div>
                 <label for="status" class="block text-sm font-medium text-gray-700">Status</label>
-                <select id="status" required class="mt-1 block w-full px-4 py-2 border border-gray-300 bg-white text-gray-900 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <select id="status" class="mt-1 block w-full px-4 py-2 border border-gray-300 bg-white text-gray-900 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                     <option value="Working" class="bg-white">Working</option>
                     <option value="Not Working" class="bg-white">Not Working</option>
                 </select>
             </div>
             <div>
                 <label for="date" class="block text-sm font-medium text-gray-700">Date of Commence</label>
-                <input type="date" id="date" required class="mt-1 block w-full px-4 py-2 border border-gray-300 bg-white text-gray-900 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <input type="date" id="date" class="mt-1 block w-full px-4 py-2 border border-gray-300 bg-white text-gray-900 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
             </div>
             <div>
                 <label for="contractor" class="block text-sm font-medium text-gray-700">Contractor</label>
-                <input type="text" id="contractor" placeholder="Contractor" required class="mt-1 block w-full px-4 py-2 border border-gray-300 bg-white text-gray-900 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <input type="text" id="contractor" placeholder="Contractor" class="mt-1 block w-full px-4 py-2 border border-gray-300 bg-white text-gray-900 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
             </div>
             <div>
                 <label for="contact" class="block text-sm font-medium text-gray-700">Contact</label>
-                <input type="text" id="contact" placeholder="Contact" required class="mt-1 block w-full px-4 py-2 border border-gray-300 bg-white text-gray-900 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <input type="text" id="contact" placeholder="Contact" class="mt-1 block w-full px-4 py-2 border border-gray-300 bg-white text-gray-900 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
             </div>
             <div>
                 <label for="curveFile" class="block text-sm font-medium text-gray-700">Performance Curve</label>
@@ -522,22 +522,23 @@
         const fileInput = document.getElementById('curveFile');
         const file = fileInput.files[0];
 
-        const pumpData = {
-            name: document.getElementById('name').value,
-            region: document.getElementById('region').value,
-            location: document.getElementById('location').value,
-            pumpType: document.getElementById('pumpType').value,
-            wsScheme: document.getElementById('wsScheme').value,
-            head: parseFloat(document.getElementById('head').value),
-            capacity: parseFloat(document.getElementById('capacity').value),
-            power: parseFloat(document.getElementById('power').value),
-            status: document.getElementById('status').value,
-            date: document.getElementById('date').value,
-            contractor: document.getElementById('contractor').value,
-            contact: document.getElementById('contact').value,
-            remark: document.getElementById('remark').value,
-            curveFile: ""
-        };
+    const pumpData = {
+    name: document.getElementById('name').value || "",
+    region: document.getElementById('region').value || "",
+    location: document.getElementById('location').value || "",
+    pumpType: document.getElementById('pumpType').value || "",
+    wsScheme: document.getElementById('wsScheme').value || "",
+    head: parseFloat(document.getElementById('head').value) || null,
+    capacity: parseFloat(document.getElementById('capacity').value) || null,
+    power: parseFloat(document.getElementById('power').value) || null,
+    status: document.getElementById('status').value || "",
+    date: document.getElementById('date').value || "",
+    contractor: document.getElementById('contractor').value || "",
+    contact: document.getElementById('contact').value || "",
+    remark: document.getElementById('remark').value || "",
+    curveFile: ""
+};
+
 
         if (file) {
             uploadFileAndSave(pumpData, file, editKey);
@@ -577,13 +578,13 @@
         );
     }
 
-    function savePump(editKey, pumpData) {
-        if (editKey) {
-            db.ref("pumps/" + editKey).set(pumpData);
-        } else {
-            db.ref("pumps").push(pumpData);
-        }
+   function savePump(editKey, pumpData) {
+    if (editKey) {
+        db.ref("pumps/" + editKey).update(pumpData); // keeps spareParts
+    } else {
+        db.ref("pumps").push(pumpData);
     }
+}
 
     window.editPump = function(key) {
         db.ref("pumps/" + key).once("value").then(snapshot => {
