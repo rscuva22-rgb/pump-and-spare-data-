@@ -791,14 +791,16 @@
         sparePartsModal.classList.add('open');
     };
 
-    window.closeSparePartsModal = function() {
-        sparePartsModal.classList.remove('open');
-        // Detach listener to prevent memory leaks
-        if (sparePartsListener) {
-            db.ref(`pumps/${currentPumpKeyInput.value}/spareParts`).off("value", sparePartsListener);
-            sparePartsListener = null;
-        }
-    };
+  window.closeSparePartsModal = function() {
+    sparePartsModal.classList.remove('open');
+    // Detach listener to prevent memory leaks
+    if (sparePartsListener) {
+        db.ref(`pumps/${currentPumpKeyInput.value}/spareParts`).off("value", sparePartsListener);
+        sparePartsListener = null;
+    }
+    editingPartKey = null;
+    document.querySelector('#sparePartsForm button[type="submit"]').textContent = "Add Part";
+};
 
     function renderSparePartsTable(parts) {
         sparePartsTable.innerHTML = "";
@@ -815,37 +817,70 @@
                 <td class="px-6 py-4">${part.pumpLocation || ''}</td>
                 <td class="px-6 py-4">${part.quantity}</td>
                 <td class="px-6 py-4">${part.lastChecked}</td>
-                <td class="px-6 py-4">
-                    <button onclick="deleteSparePart('${currentPumpKeyInput.value}', '${part.key}')" class="text-red-600 hover:text-red-800 transition-colors"><i class="fas fa-trash"></i> Delete</button>
-                </td>
+                <td class="px-6 py-4 space-x-2">
+    <button onclick="editSparePart('${currentPumpKeyInput.value}', '${part.key}')" 
+        class="text-blue-600 hover:text-blue-800 transition-colors">
+        <i class="fas fa-edit"></i> Edit
+    </button>
+    <button onclick="deleteSparePart('${currentPumpKeyInput.value}', '${part.key}')" 
+        class="text-red-600 hover:text-red-800 transition-colors">
+        <i class="fas fa-trash"></i> Delete
+    </button>
+</td>
+
             `;
             sparePartsTable.appendChild(row);
         });
     }
 
     sparePartsForm.addEventListener('submit', e => {
-        e.preventDefault();
-        const pumpKey = currentPumpKeyInput.value;
-        const partName = document.getElementById('partName').value;
-        const pumpLocation = document.getElementById('sparePartLocation').value;
-        const quantity = document.getElementById('quantity').value;
-        
-        const sparePartData = {
-            partName,
-            pumpLocation,
-            quantity: parseInt(quantity, 10),
-            lastChecked: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
-        };
+    e.preventDefault();
+    const pumpKey = currentPumpKeyInput.value;
+    const partName = document.getElementById('partName').value;
+    const pumpLocation = document.getElementById('sparePartLocation').value;
+    const quantity = document.getElementById('quantity').value;
+    
+    const sparePartData = {
+        partName,
+        pumpLocation,
+        quantity: parseInt(quantity, 10),
+        lastChecked: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+    };
 
+    if (editingPartKey) {
+        // Update existing part
+        db.ref(`pumps/${pumpKey}/spareParts/${editingPartKey}`).set(sparePartData);
+        editingPartKey = null;
+        document.querySelector('#sparePartsForm button[type="submit"]').textContent = "Add Part";
+    } else {
+        // Add new part
         db.ref(`pumps/${pumpKey}/spareParts`).push(sparePartData);
-        sparePartsForm.reset();
-    });
+    }
+
+    sparePartsForm.reset();
+});
+
 
     window.deleteSparePart = function(pumpKey, partKey) {
         showCustomConfirm("Are you sure you want to delete this spare part?", () => {
             db.ref(`pumps/${pumpKey}/spareParts/${partKey}`).remove();
         });
     };
+let editingPartKey = null; // track if editing
+
+window.editSparePart = function(pumpKey, partKey) {
+    db.ref(`pumps/${pumpKey}/spareParts/${partKey}`).once("value").then(snapshot => {
+        const part = snapshot.val();
+        if (!part) return;
+
+        document.getElementById('partName').value = part.partName;
+        document.getElementById('sparePartLocation').value = part.pumpLocation || "";
+        document.getElementById('quantity').value = part.quantity;
+
+        editingPartKey = partKey; // set editing key
+        document.querySelector('#sparePartsForm button[type="submit"]').textContent = "Update Part";
+    });
+};
 
     function renderSparePartsSummaryTable(pumps) {
         sparePartsSummaryTable.innerHTML = "";
